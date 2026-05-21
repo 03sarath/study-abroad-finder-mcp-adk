@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Study Abroad Finder</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 860px; margin: 50px auto; padding: 0 20px; background: #f0f4f8; }
+        h1 { color: #2c3e50; margin-bottom: 4px; }
+        .subtitle { color: #666; margin-bottom: 20px; font-size: 14px; }
+        .tags { margin-bottom: 24px; }
+        .tag { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin: 3px; font-weight: bold; }
+        .tag-tavily  { background: #fef9e7; color: #d35400; border: 1px solid #f39c12; }
+        .tag-maps    { background: #eafaf1; color: #1e8449; border: 1px solid #27ae60; }
+        .tag-scholar { background: #eaf2ff; color: #1a5276; border: 1px solid #2980b9; }
+        .tag-fs      { background: #f5eef8; color: #6c3483; border: 1px solid #8e44ad; }
+        textarea { width: 100%; padding: 12px; font-size: 15px; border: 1px solid #ccc; border-radius: 6px; resize: vertical; box-sizing: border-box; }
+        .examples { margin: 10px 0; font-size: 13px; color: #777; }
+        .examples span { cursor: pointer; color: #2980b9; margin-right: 12px; text-decoration: underline; }
+        button { margin-top: 12px; padding: 10px 30px; font-size: 15px; background: #2980b9; color: white; border: none; border-radius: 6px; cursor: pointer; }
+        button:disabled { background: #aaa; }
+        #status { margin-top: 14px; color: #888; font-style: italic; font-size: 14px; }
+        #result { margin-top: 24px; background: white; padding: 24px; border-radius: 8px; border: 1px solid #ddd; white-space: pre-wrap; line-height: 1.8; display: none; font-size: 14px; }
+        .result-label { font-weight: bold; color: #2c3e50; margin-bottom: 12px; font-size: 15px; }
+    </style>
+</head>
+<body>
+    <h1>Study Abroad Finder</h1>
+    <p class="subtitle">AI-powered advisor combining 4 MCP servers to find the best universities for you</p>
+
+    <div class="tags">
+        <span class="tag tag-tavily">Tavily MCP — web search</span>
+        <span class="tag tag-maps">Google Maps MCP — weather + places</span>
+        <span class="tag tag-scholar">Scholarship MCP — scholarships, costs, visas</span>
+        <span class="tag tag-fs">Filesystem MCP — saves report</span>
+    </div>
+
+    <textarea id="question" rows="3"
+        placeholder="e.g. Top universities for Machine Learning in USA"></textarea>
+
+    <div class="examples">
+        Try:
+        <span onclick="setQ('Top universities for Machine Learning in USA')">ML in USA</span>
+        <span onclick="setQ('Best universities for Computer Science in Canada')">CS in Canada</span>
+        <span onclick="setQ('Top universities for Data Science in UK')">Data Science in UK</span>
+        <span onclick="setQ('Best universities for Artificial Intelligence in Germany')">AI in Germany</span>
+    </div>
+
+    <button id="btn" onclick="askQuestion()">Find Universities</button>
+    <div id="status"></div>
+
+    <div id="result">
+        <div class="result-label">Study Abroad Recommendations:</div>
+        <div id="answer"></div>
+    </div>
+
+    <script>
+        function setQ(text) {
+            document.getElementById("question").value = text;
+        }
+
+        async function askQuestion() {
+            const question = document.getElementById("question").value.trim();
+            if (!question) { alert("Please enter a question."); return; }
+
+            const btn    = document.getElementById("btn");
+            const status = document.getElementById("status");
+            const result = document.getElementById("result");
+            const answer = document.getElementById("answer");
+
+            btn.disabled = true;
+            status.textContent = "Searching universities... checking scholarships, costs & visas... getting weather... saving report... please wait (this may take 30-60 seconds).";
+            result.style.display = "none";
+
+            try {
+                const res = await fetch("/ask", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ question })
+                });
+                const data = await res.json();
+                if (data.error) {
+                    status.textContent = "Error: " + data.error;
+                } else {
+                    status.textContent = "Done! Full report saved to your reports folder.";
+                    answer.textContent = data.answer;
+                    result.style.display = "block";
+                }
+            } catch (err) {
+                status.textContent = "Something went wrong. Check the terminal for errors.";
+            }
+            btn.disabled = false;
+        }
+    </script>
+</body>
+</html>
